@@ -34,6 +34,7 @@ final class FollowerListVC: UIViewController {
         setupCollection()
         getData()
         configureDatasource()
+       
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -46,18 +47,33 @@ final class FollowerListVC: UIViewController {
         isLoading = true
         showGFLoadingIndicator()
         NetworkManager.shared.getFollowers(for: username, page: page) { [weak self] result in
-            self?.hideGFLoadingIndicator()
-            self?.isLoading = false
+            guard let self else { return }
+            
+            hideGFLoadingIndicator()
+            isLoading = false
             
             switch result {
             case .success(let followers):
-                self?.isMoreFollowers = followers.count == 100
+                isMoreFollowers = followers.count == 100
                 
-                self?.followers.append(contentsOf: followers)
-                self?.updateData()
+                self.followers.append(contentsOf: followers)
+                
+                if followers.isEmpty {
+                    let message = "No followers found for \(username ?? "")"
+                    DispatchQueue.main.async {
+                        self.showEmptyStateView(message: message, in: self.view)
+                    }
+                    return
+                }
+                
+                updateData()
                 
             case .failure(let failure):
-                self?.presentGFAlertOnMainThread(title: "Bad stuff Happened", message: failure.rawValue, buttonTitle: "Ok")
+                presentGFAlertOnMainThread(title: "Bad stuff Happened", message: failure.rawValue, buttonTitle: "Ok")
+                let message = "No followers found for \(username ?? "")"
+                DispatchQueue.main.async {
+                    self.showEmptyStateView(message: message, in: self.view)
+                }
             }
         }
     }
