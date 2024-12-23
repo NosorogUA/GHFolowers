@@ -14,6 +14,9 @@ final class FollowerListVC: UIViewController {
     
     var username: String!
     private var followers: [Follower] = []
+    private var page = 1
+    private var isLoading = false
+    private var isMoreFollowers = true
     
     private var datasource: UICollectionViewDiffableDataSource<Section, Follower>?
     
@@ -21,8 +24,7 @@ final class FollowerListVC: UIViewController {
         let collection = UICollectionView(frame: view.frame, collectionViewLayout: UIHelper.createThreeColumnLayout(width: view.bounds.width))
         collection.backgroundColor = .systemBackground
         collection.register(FollowerCell.self, forCellWithReuseIdentifier: FollowerCell.reuseIdentifier)
-//        collection.delegate = self
-//        collection.dataSource = self
+        collection.delegate = self
         return collection
     }()
     
@@ -40,11 +42,17 @@ final class FollowerListVC: UIViewController {
     }
     
     private func getData() {
-        NetworkManager.shared.getFollowers(for: username, page: 1) { [weak self] result in
+        guard !isLoading else { return }
+        isLoading = true
+        
+        NetworkManager.shared.getFollowers(for: username, page: page) { [weak self] result in
+            self?.isLoading = false
             
             switch result {
             case .success(let followers):
-                self?.followers = followers
+                self?.isMoreFollowers = followers.count == 100
+                
+                self?.followers.append(contentsOf: followers)
                 self?.updateData()
                 
             case .failure(let failure):
@@ -78,5 +86,20 @@ final class FollowerListVC: UIViewController {
     
     private func setupCollection() {
         view.addSubview(collection)
+    }
+}
+
+extension FollowerListVC: UICollectionViewDelegate {
+    func scrollViewWillEndDragging(_ scrollView: UIScrollView, withVelocity velocity: CGPoint, targetContentOffset: UnsafeMutablePointer<CGPoint>) {
+        guard isMoreFollowers else { return }
+        
+        let offsetY = scrollView.contentOffset.y
+        let contentHeight = scrollView.contentSize.height
+        let height = scrollView.frame.size.height
+        
+        if offsetY >= contentHeight - height {
+            page += 1
+            getData()
+        }
     }
 }
