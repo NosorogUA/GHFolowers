@@ -44,8 +44,9 @@ final class FollowerListVC: UIViewController {
     private func getData() {
         guard !isLoading else { return }
         isLoading = true
-        
+        showGFLoadingIndicator()
         NetworkManager.shared.getFollowers(for: username, page: page) { [weak self] result in
+            self?.hideGFLoadingIndicator()
             self?.isLoading = false
             
             switch result {

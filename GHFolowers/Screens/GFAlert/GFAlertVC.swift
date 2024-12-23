@@ -124,13 +124,3 @@ final class GFAlertVC: UIViewController {
         animatedClose()
     }
 }
-
-
-extension UIViewController {
-    func presentGFAlertOnMainThread(title: String, message: String?, buttonTitle: String?) {
-        DispatchQueue.main.async {
-            let alertVC = GFAlertVC(allertTitle: title, message: message, buttonTitle: buttonTitle)
-            self.present(alertVC, animated: true)
-        }
-    }
-}
