@@ -23,7 +23,7 @@ final class NetworkManager {
         }
         
         let task = URLSession.shared.dataTask(with: url) { data, response, error in
-            if let error {
+            if error != nil {
                 completion(.failure(GFError.invalidRequest(#function)))
                 return
             }
@@ -45,6 +45,42 @@ final class NetworkManager {
                 completion(.success(followers))
             } catch {
                 completion(.failure(GFError.unableToDecode(#function + "[Follower]")))
+            }
+            
+        }
+        task.resume()
+    }
+    
+    func getUserInfo(for username: String, completion: @escaping(Result<User, GFError>) -> Void) {
+        let path = baseUrl + "/users/\(username)"
+        guard let url: URL = .init(string: path) else {
+            completion(.failure(GFError.invalidURL(#function)))
+            return
+        }
+        
+        let task = URLSession.shared.dataTask(with: url) { data, response, error in
+            if error != nil {
+                completion(.failure(GFError.invalidRequest(#function)))
+                return
+            }
+            
+            guard let response = response as? HTTPURLResponse, response.statusCode == 200 else {
+                completion(.failure(GFError.invalidResponse(#function)))
+                return
+            }
+            
+            guard let data else {
+                completion(.failure(GFError.invalidData(#function)))
+                return
+            }
+            
+            do {
+                let decoder = JSONDecoder()
+                decoder.keyDecodingStrategy = .convertFromSnakeCase
+                let user: User = try decoder.decode(User.self, from: data)
+                completion(.success(user))
+            } catch {
+                completion(.failure(GFError.unableToDecode(#function + "User")))
             }
             
         }
