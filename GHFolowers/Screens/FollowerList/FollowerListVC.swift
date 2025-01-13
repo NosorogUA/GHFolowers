@@ -114,7 +114,6 @@ final class FollowerListVC: UIViewController {
         DispatchQueue.main.async {
             self.datasource?.apply(snapshot, animatingDifferences: true)
         }
-        collection.setContentOffset(.zero, animated: true)
     }
     
     private func setupCollection() {
@@ -164,8 +163,10 @@ extension FollowerListVC: UISearchResultsUpdating, UISearchBarDelegate {
 extension FollowerListVC: FollowerListVCDelegate {
     func dadRequestFollowers(for username: String) {
         self.username = username
-        followers = []
-        filteredFollowers = []
+        followers.removeAll()
+        filteredFollowers.removeAll()
+        page = 1
+        collection.setContentOffset(.zero, animated: true)
         getData()
     }
 }
