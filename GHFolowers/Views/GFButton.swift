@@ -30,5 +30,9 @@ class GFButton: UIButton {
         setTitleColor(.white, for: .normal)
         setTitleColor(.gray, for: .highlighted)
         titleLabel?.font = UIFont.preferredFont(forTextStyle: .headline)
+        
+        NSLayoutConstraint.activate([
+            heightAnchor.constraint(equalToConstant: 50)
+        ])
     }
 }

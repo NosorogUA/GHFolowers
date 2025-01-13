@@ -94,8 +94,9 @@ final class NetworkManager {
             return
         }
         
-        let cacheKey = NSString(string: urlString)
-        if let cachedImage = cache.object(forKey: cacheKey) {
+        let cacheKey = urlString
+        
+        if let cachedImage = cache.object(forKey: cacheKey as NSString) {
             completion(cachedImage)
             print("From cache")
             return
@@ -118,7 +119,8 @@ final class NetworkManager {
                 return
             }
             
-            self?.cache.setObject(image, forKey: cacheKey)
+            // Cache the image with the `cacheKey` as NSString (casting the String to NSString)
+            self?.cache.setObject(image, forKey: cacheKey as NSString)
             completion(image)
         }
         task.resume()

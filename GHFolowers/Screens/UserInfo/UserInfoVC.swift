@@ -37,9 +37,14 @@ class UserInfoVC: UIViewController {
     
     private func showInfo(_ user: User) {
         DispatchQueue.main.async {
-            let stackView = UIStackView(arrangedSubviews: [UserInfoHeaderView(user: user), UIView()])
+            let stackView = UIStackView(arrangedSubviews: [
+                UserInfoHeaderView(user: user),
+                GFInfoView(type: .repo(countRepo: user.publicRepos, countGists: user.publicGists)),
+                GFInfoView(type: .followers(followers: user.followers, following: user.following)),
+                UIView()])
+            
             stackView.distribution = .fill
-            stackView.alignment = .top
+            stackView.alignment = .fill
             stackView.spacing = 16
             stackView.axis = .vertical
             
