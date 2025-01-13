@@ -29,6 +29,10 @@ final class FollowerCell: UICollectionViewCell {
         return label
     }()
     
+    override func prepareForReuse() {
+        avatarImageView.image = nil
+        usernameLabel.text = nil
+    }
     
     func set(follower: Follower) {
         usernameLabel.text = follower.login

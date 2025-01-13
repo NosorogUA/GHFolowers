@@ -7,7 +7,12 @@
 
 import UIKit
 
-class UserInfoVC: UIViewController {
+protocol UserInfoVCDelegate: AnyObject {
+    func didTapGitGubProfile()
+    func didTapGetFollowers()
+}
+
+final class UserInfoVC: UIViewController {
     
     private lazy var stackView: UIStackView = {
         let stackView = UIStackView()
@@ -17,8 +22,10 @@ class UserInfoVC: UIViewController {
         stackView.axis = .vertical
         return stackView
     }()
+    weak var delegate: FollowerListVCDelegate?
     
     var userName: String!
+    var user: User?
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -35,20 +42,22 @@ class UserInfoVC: UIViewController {
             
             switch result {
             case .success(let user):
-                showInfo(user)
-                print(user)
+                self.user = user
+                showInfo()
+               
             case .failure(let failure):
                 presentGFAlertOnMainThread(title: "Something went wrong", message: failure.rawValue, buttonTitle: "Ok")
             }
         }
     }
     
-    private func showInfo(_ user: User) {
+    private func showInfo() {
+        guard let user else { return }
         DispatchQueue.main.async {
             
             let header = UserInfoHeaderView(user: user)
-            let repoInfo = GFInfoView(type: .repo(countRepo: user.publicRepos, countGists: user.publicGists))
-            let followersInfo = GFInfoView(type: .followers(followers: user.followers, following: user.following))
+            let repoInfo = GFInfoView(type: .repo(countRepo: user.publicRepos, countGists: user.publicGists), delegate: self)
+            let followersInfo = GFInfoView(type: .followers(followers: user.followers, following: user.following), delegate: self)
             
             let dateLabel = GFBodyLabel(textAlignment: .center)
             if let date = Date.fromISOStringToDate(user.createdAt) {
@@ -69,5 +78,25 @@ class UserInfoVC: UIViewController {
 
     @objc func dissmissVC() {
         dismiss(animated: true)
+    }
+}
+
+extension UserInfoVC: UserInfoVCDelegate {
+    func didTapGitGubProfile() {
+        guard let user else { return }
+        guard let url = URL(string: user.htmlUrl) else {
+            presentGFAlertOnMainThread(title: "Invalid URL", message: "User's GitHub profile URL is invalid", buttonTitle: "Ok")
+            return
+        }
+        presentSafariVC(with: url)
+    }
+    
+    func didTapGetFollowers() {
+        guard user?.followers ?? 0 > 0 else {
+            presentGFAlertOnMainThread(title: "this user has no followers", message: "Only users with followers can request followers", buttonTitle: "Ok")
+            return
+        }
+        delegate?.dadRequestFollowers(for: user?.login ?? "")
+        self.dissmissVC()
     }
 }

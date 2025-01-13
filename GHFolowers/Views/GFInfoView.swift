@@ -7,6 +7,14 @@
 import UIKit
 
 class GFInfoView: UIView {
+    
+    private let padding: CGFloat = 20
+    
+    private var type: InfoType
+    
+    private var actionButton: GFButton!
+    private lazy var leftInfoItem = GFInfoItemView()
+    private lazy var rightInfoItem = GFInfoItemView()
     private lazy var containerStack: UIStackView = {
         let stack = UIStackView()
         stack.axis = .vertical
@@ -21,15 +29,24 @@ class GFInfoView: UIView {
         return stack
     }()
     
-    let leftInfoItem : GFInfoItemView
-    let rightInfoItem: GFInfoItemView
-    let actionButton: GFButton
-    let padding: CGFloat = 20
+    weak var delegate: UserInfoVCDelegate?
     
-    required init(type: InfoType) {
-        leftInfoItem = GFInfoItemView()
-        rightInfoItem = GFInfoItemView()
+    required init(type: InfoType, delegate: UserInfoVCDelegate?) {
+        self.delegate = delegate
+        self.type = type
         
+        super.init(frame: .zero)
+        
+        prepareData()
+        addButtonAction()
+        configure()
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    private func prepareData() {
         switch type {
         case .repo(let repos, let gists):
             leftInfoItem.set(type: .repos, withCount: repos)
@@ -40,13 +57,10 @@ class GFInfoView: UIView {
             rightInfoItem.set(type: .following, withCount: following)
             actionButton = GFButton(background: .systemMint, title: "Get Followers")
         }
-        
-        super.init(frame: .zero)
-        configure()
     }
     
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
+    private func addButtonAction() {
+        actionButton.addTarget(self, action: #selector (actionButtonTapped), for: .touchUpInside)
     }
     
     private func configure() {
@@ -63,6 +77,15 @@ class GFInfoView: UIView {
         
         containerStack.addArrangedSubview(topStack)
         containerStack.addArrangedSubview(actionButton)
+    }
+    
+    @objc private func actionButtonTapped() {
+        switch type {
+        case .repo(_, _):
+            delegate?.didTapGitGubProfile()
+        case .followers(_, _):
+            delegate?.didTapGetFollowers()
+        }
     }
 }
 
